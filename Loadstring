@@ -1,1 +1,59 @@
-Soon.
+local player = game.Players.LocalPlayer
+local camera = game.Workspace.CurrentCamera
+
+local originalFOV = camera.FieldOfView
+local originalBlurStrength = 0
+local transitionTime = 0.6 -- in seconds
+local isAltered = false
+local blurEffect = nil
+
+local function setBlur(strength)
+    if not blurEffect then
+        blurEffect = Instance.new("BlurEffect")
+        blurEffect.Parent = camera
+    end
+    blurEffect.Size = strength
+end
+
+local function clearBlur()
+    if blurEffect then
+        blurEffect:Destroy()
+        blurEffect = nil
+    end
+end
+
+local function transitionFOV(targetFOV)
+    local fovGoal = {}
+    fovGoal.FieldOfView = targetFOV
+
+    local fovTween = game:GetService("TweenService"):Create(camera, TweenInfo.new(transitionTime, Enum.EasingStyle.Linear), fovGoal)
+
+    fovTween:Play()
+
+    return fovTween
+end
+
+local function toggleFOVAndBlur()
+    if isAltered then
+        if camera.FieldOfView == 70 then
+            clearBlur()
+        else
+            transitionFOV(originalFOV)
+            clearBlur()
+        end
+    else
+        originalBlurStrength = blurEffect and blurEffect.Size or 0
+        transitionFOV(40)
+        setBlur(25)
+    end
+
+    isAltered = not isAltered
+end
+
+local function onKeyPress(input)
+    if input.KeyCode == Enum.KeyCode.Quote then
+        toggleFOVAndBlur()
+    end
+end
+
+game:GetService("UserInputService").InputBegan:Connect(onKeyPress)
